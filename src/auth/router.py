@@ -13,7 +13,7 @@ from src.utils import (
 )
 from uuid import uuid4
 from src.auth.models import User as ModelUser
-from src.auth.dependencies import get_current_user
+from src.auth.dependencies import get_current_user, RoleChecker
 
 router = APIRouter(prefix="/auth")
 
@@ -27,10 +27,11 @@ async def create_user(data: UserSchema):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exist"
         )
-    db_user = ModelUser(username=data.username, email=data.email, password=get_hashed_password(data.password))
+    db_user = ModelUser(username=data.username, email=data.email, password=get_hashed_password(data.password),
+                        role_id=data.role_id)
     db.session.add(db_user)
     db.session.commit()    # saving user to database
-    user = UserResponse(username=db_user.username, email=db_user.email, id=db_user.id)
+    user = UserResponse(username=db_user.username, email=db_user.email, id=db_user.id, role=db_user.role.name.value)
     return user
 
 
@@ -54,6 +55,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "access_token": create_access_token(user.email),
         "refresh_token": create_refresh_token(user.email),
     }
+
+allow_read_resource = RoleChecker(["admin"])
 
 
 @router.get('/me', summary='Get details of currently logged in user', response_model=UserResponse)

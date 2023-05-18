@@ -6,6 +6,7 @@ class User(BaseModel):
     username: str
     email: str
     password: str
+    role_id: int
 
     class Config:
         orm_mode = True
@@ -15,6 +16,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     id: int
+    role: str
 
 
 class Token(BaseModel):

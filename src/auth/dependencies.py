@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Union, Any, List
 from datetime import datetime
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -47,4 +47,14 @@ async def get_current_user(token: str = Depends(reuseable_oauth)) -> UserRespons
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find user",
         )
-    return UserResponse(id=user.id, username=user.username, email=user.email)
+    return UserResponse(id=user.id, username=user.username, email=user.email, role=user.role.name.value)
+
+
+class RoleChecker:
+    def __init__(self, allowed_roles: List):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, user: UserResponse = Depends(get_current_user)):
+        if user.role not in self.allowed_roles:
+            raise HTTPException(status_code=403, detail="Operation not permitted")\
+
