@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status, HTTPException, Depends
-from fastapi.responses import RedirectResponse
+from starlette.status import HTTP_204_NO_CONTENT
 from fastapi.security import OAuth2PasswordRequestForm
 from src.auth.schema import User as UserSchema
 from src.auth.schema import Token as TokenSchema
-from src.auth.schema import UserResponse
+from src.auth.schema import UserResponse, UserUpdate
 from fastapi_sqlalchemy import db
 from src.utils import (
     get_hashed_password,
@@ -11,7 +11,6 @@ from src.utils import (
     create_refresh_token,
     verify_password
 )
-from uuid import uuid4
 from src.auth.models import User as ModelUser
 from src.auth.dependencies import get_current_user, RoleChecker
 
@@ -59,6 +58,28 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 allow_read_resource = RoleChecker(["admin"])
 
 
-@router.get('/me', summary='Get details of currently logged in user', response_model=UserResponse)
+@router.get('/my_user', summary='Get details of currently logged in user', response_model=UserResponse)
 async def get_me(user: ModelUser = Depends(get_current_user)):
     return user
+
+
+@router.patch('/my_user', summary='Patch current user', response_model=UserResponse)
+async def patch_user(data: UserUpdate, user: ModelUser = Depends(get_current_user)):
+    update_data = data.dict(exclude_unset=True)
+    updated_item = user.copy(update=update_data)
+    to_update = updated_item.dict()
+    to_update.pop("role")
+    if to_update.get("password"):
+        to_update["password"] = get_hashed_password(to_update["password"])
+    db.session.query(ModelUser).filter_by(id=user.id).update(to_update, synchronize_session=False)
+    db.session.commit()
+    response = UserResponse(**to_update, role=user.role)
+    return response
+
+
+@router.delete("/my_user", status_code=HTTP_204_NO_CONTENT)
+def delete_user(user: ModelUser = Depends(get_current_user)):
+    db_user = db.session.query(ModelUser).filter_by(id=user.id).first()
+    db.session.delete(db_user)
+    db.session.commit()
+    return None

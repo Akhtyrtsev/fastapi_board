@@ -1,5 +1,6 @@
 # build a schema using pydantic
 from pydantic import BaseModel
+from typing import List, Union
 
 
 class User(BaseModel):
@@ -18,6 +19,11 @@ class UserResponse(BaseModel):
     id: int
     role: str
 
+
+class UserUpdate(BaseModel):
+    username: Union[str, None] = None
+    email: Union[str, None] = None
+    password: Union[str, None] = None
 
 class Token(BaseModel):
     access_token: str

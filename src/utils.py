@@ -43,3 +43,15 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) ->
     encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
     return encoded_jwt
 
+
+def connect_to_db():
+    from sqlalchemy import create_engine
+    from sqlalchemy.ext.declarative import declarative_base
+    from sqlalchemy.orm import sessionmaker
+    from src.db import Base
+    url = "postgresql://board:board@postgres/board"
+    engine = create_engine(url)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session
+

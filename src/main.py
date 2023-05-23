@@ -7,13 +7,16 @@ from src.auth.schema import User
 from src.auth.models import User as ModelUser
 
 from src.auth.router import router as auth_router
+from src.board.router import router as board_router
 from src.auth.dependencies import RoleChecker
 import os
 
 app = FastAPI()
 
 app.add_middleware(DBSessionMiddleware, db_url=os.environ['DATABASE_URL'])
+app.include_router(board_router)
 app.include_router(auth_router)
+
 
 @app.get("/")
 async def root():
