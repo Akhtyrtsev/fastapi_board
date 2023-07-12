@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Union
 from datetime import date, datetime, time, timedelta
 
@@ -31,6 +31,22 @@ class Project(BaseModel):
     created: datetime
     updated: Union[datetime, None] = None
 
+    @validator('created', 'updated', pre=True)
+    def parse_datetime(cls, value):
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+            except ValueError as e:
+                print(e)
+                return datetime.now()
+        return value
+
+    @validator('created', 'updated', whole=True)
+    def format_datetime(cls, value):
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        return value
+
 
 class ProjectChange(BaseModel):
     name: Union[str, None] = None
@@ -49,6 +65,22 @@ class Ticket(BaseModel):
     project_id: int
     created: datetime
     updated: Union[datetime, None] = None
+
+    @validator('created', 'updated', pre=True)
+    def parse_datetime(cls, value):
+        if isinstance(value, str):
+            try:
+                return datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+            except ValueError as e:
+                print(e)
+                return datetime.now()
+        return value
+
+    @validator('created', 'updated', whole=True)
+    def format_datetime(cls, value):
+        if isinstance(value, datetime):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        return value
 
 
 class TicketChange(BaseModel):

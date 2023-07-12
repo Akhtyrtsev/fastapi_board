@@ -1,32 +1,23 @@
-import uvicorn
-from fastapi import FastAPI, Depends
-from fastapi_sqlalchemy import DBSessionMiddleware, db
-
-from src.auth.schema import User as SchemaUser
-from src.auth.schema import User
-from src.auth.models import User as ModelUser
+from fastapi import FastAPI
+from fastapi_sqlalchemy import DBSessionMiddleware
 
 from src.auth.router import router as auth_router
 from src.board.router import router as board_router
-from src.auth.dependencies import RoleChecker
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI()
 
+origins = ['*']
+
 app.add_middleware(DBSessionMiddleware, db_url=os.environ['DATABASE_URL'])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(board_router)
 app.include_router(auth_router)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-admin_permission = RoleChecker(["admin"])
-
-
-@app.get('/users/', dependencies=[Depends(admin_permission)],)
-async def users():
-    users_query = db.session.query(ModelUser).all()
-    return users_query
 

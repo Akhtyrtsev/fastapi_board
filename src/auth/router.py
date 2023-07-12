@@ -12,7 +12,7 @@ from src.utils import (
     verify_password
 )
 from src.auth.models import User as ModelUser
-from src.auth.dependencies import get_current_user, RoleChecker
+from src.auth.dependencies import get_current_user, RoleChecker, get_current_user_refresh
 
 router = APIRouter(prefix="/auth")
 
@@ -63,7 +63,15 @@ async def get_me(user: ModelUser = Depends(get_current_user)):
     return user
 
 
-@router.patch('/my_user', summary='Patch current user', response_model=UserResponse)
+@router.get('/refresh', summary='Get tokens using refresh token')
+async def get_me(user: ModelUser = Depends(get_current_user_refresh)):
+    return {
+        "access_token": create_access_token(user.email),
+        "refresh_token": create_refresh_token(user.email),
+    }
+
+
+@router.patch('/my_user', summary='Patch current user')
 async def patch_user(data: UserUpdate, user: ModelUser = Depends(get_current_user)):
     update_data = data.dict(exclude_unset=True)
     updated_item = user.copy(update=update_data)
@@ -73,7 +81,11 @@ async def patch_user(data: UserUpdate, user: ModelUser = Depends(get_current_use
         to_update["password"] = get_hashed_password(to_update["password"])
     db.session.query(ModelUser).filter_by(id=user.id).update(to_update, synchronize_session=False)
     db.session.commit()
-    response = UserResponse(**to_update, role=user.role)
+    access_token = create_access_token(to_update.get('email'))
+    refresh_token = create_refresh_token(to_update.get('email'))
+    response = UserResponse(**to_update, role=user.role).dict()
+    response['access_token'] = access_token
+    response['refresh_token'] = refresh_token
     return response
 
 

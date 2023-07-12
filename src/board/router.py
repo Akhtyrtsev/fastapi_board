@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, HTTPException, Depends, File, UploadFile
 from starlette.status import HTTP_204_NO_CONTENT
 from datetime import datetime
 from src.auth.models import User as ModelUser
@@ -258,6 +258,12 @@ async def delete_ticket(ticket_id: int, user: ModelUser = Depends(get_current_us
     db.session.delete(db_ticket)
     db.session.commit()
     return None
+
+
+@router.post("/upload-file")
+async def create_upload_file(file: UploadFile):
+    return {"file_url": 'https://media.altchar.com/prod/images/940_530/gm-d426d7a3-12a7-40ea-9c74-4b0b7cea16aa-elden-ring-melina.jpg'}
+
 
 
 

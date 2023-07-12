@@ -4,7 +4,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from src.utils import (
     ALGORITHM,
-    JWT_SECRET_KEY
+    JWT_SECRET_KEY,
+    JWT_REFRESH_SECRET_KEY
 )
 
 from jose import jwt
@@ -34,7 +35,35 @@ async def get_current_user(token: str = Depends(reuseable_oauth)) -> UserRespons
                 detail="Token expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except(jwt.JWTError, ValidationError):
+    except(jwt.JWTError, ValidationError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = db.session.query(ModelUser).filter_by(email=token_data.sub).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Could not find user",
+        )
+    return UserResponse(id=user.id, username=user.username, email=user.email, role=user.role.name.value)
+
+async def get_current_user_refresh(token: str = Depends(reuseable_oauth)) -> UserResponse:
+    try:
+        payload = jwt.decode(
+            token, JWT_REFRESH_SECRET_KEY, algorithms=[ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+
+        if datetime.fromtimestamp(token_data.exp) < datetime.now():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except(jwt.JWTError, ValidationError) as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
