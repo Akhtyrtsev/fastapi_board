@@ -6,7 +6,27 @@ from src.board.router import router as board_router
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-app = FastAPI()
+tags_metadata = [
+    {
+        "name": "auth",
+        "description": "Auth operations. The **login** logic is also here.",
+    },
+    {
+        "name": "projects",
+        "description": "Projects endpoints",
+    },
+    {
+        "name": "profiles",
+        "description": "Profiles endpoints",
+    },
+    {
+        "name": "tickets",
+        "description": "Tickets endpoints",
+    },
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+
 
 origins = ['*']
 

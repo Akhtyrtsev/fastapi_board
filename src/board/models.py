@@ -44,3 +44,8 @@ class Ticket(Base):
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
+
+class Kek(Base):
+    __tablename__ = 'keks'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)

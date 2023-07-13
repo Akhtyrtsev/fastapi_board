@@ -28,7 +28,7 @@ router = APIRouter(prefix="/board")
 admin_permission = RoleChecker(["admin"])
 
 
-@router.get('/profiles', summary='Get list of profiles', dependencies=[Depends(admin_permission)])
+@router.get('/profiles', summary='Get list of profiles', dependencies=[Depends(admin_permission)], tags=['profiles'])
 async def get_profiles(user: ModelUser = Depends(get_current_user)):
     profiles_request = db.session.query(ModelProfile).all()
     response = [SchemaProfileWithId(id=profile.id, user_id=profile.user_id, first_name=profile.first_name,
@@ -39,7 +39,7 @@ async def get_profiles(user: ModelUser = Depends(get_current_user)):
     return response
 
 
-@router.get('/my_profile', summary='Get current user profile', response_model=SchemaProfileWithId)
+@router.get('/my_profile', summary='Get current user profile', response_model=SchemaProfileWithId, tags=['profiles'])
 async def get_profile(user: ModelUser = Depends(get_current_user)):
     profile = db.session.query(ModelProfile).filter_by(user_id=user.id).first()
     response = SchemaProfileWithId(id=profile.id, user_id=profile.user_id, first_name=profile.first_name,
@@ -49,7 +49,7 @@ async def get_profile(user: ModelUser = Depends(get_current_user)):
     return response
 
 
-@router.post('/my_profile', summary='Create profile', response_model=SchemaProfileWithId)
+@router.post('/my_profile', summary='Create profile', response_model=SchemaProfileWithId, tags=['profiles'])
 async def create_profile(data: SchemaProfile, user: ModelUser = Depends(get_current_user)):
     user_id = data.user_id if user.role == "admin" else user.id
     db_profile = ModelProfile(user_id=user_id, first_name=data.first_name, last_name=data.last_name, phone_number=data.phone_number,
@@ -63,7 +63,7 @@ async def create_profile(data: SchemaProfile, user: ModelUser = Depends(get_curr
     return response
 
 
-@router.patch('/my_profile', summary='Patch current user profile', response_model=SchemaProfileWithId)
+@router.patch('/my_profile', summary='Patch current user profile', response_model=SchemaProfileWithId,tags=['profiles'])
 async def update_profile(data: SchemaProfile, user: ModelUser = Depends(get_current_user)):
     profile = db.session.query(ModelProfile).filter_by(user_id=user.id).first()
     stored_item_model = SchemaProfileWithId(id=profile.id, user_id=profile.user_id, first_name=profile.first_name,
@@ -76,7 +76,7 @@ async def update_profile(data: SchemaProfile, user: ModelUser = Depends(get_curr
     return updated_item
 
 
-@router.get('/projects', summary='Get list of projects')
+@router.get('/projects', summary='Get list of projects', tags=['projects'])
 async def get_projects(user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         projects_request = db.session.query(ModelProject).all()
@@ -90,7 +90,7 @@ async def get_projects(user: ModelUser = Depends(get_current_user)):
     return response
 
 
-@router.get('/projects/{project_id}', summary='Get list of projects')
+@router.get('/projects/{project_id}', summary='Get list of projects', tags=['projects'])
 async def retrieve_project(project_id: int, user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         projects_request = db.session.query(ModelProject).all()
@@ -107,7 +107,7 @@ async def retrieve_project(project_id: int, user: ModelUser = Depends(get_curren
     return response
 
 
-@router.post('/projects', summary="Create new project", response_model=ProjectSchema)
+@router.post('/projects', summary="Create new project", response_model=ProjectSchema, tags=['projects'])
 async def create_project(data: ProjectChangeSchema, user: ModelUser = Depends(get_current_user)):
     user_id = data.user_id if user.role == "admin" else user.id # only admins are allowed to assign projects not to themself
     db_project = ModelProject(name=data.name, description=data.description, user_id=user_id)
@@ -120,7 +120,7 @@ async def create_project(data: ProjectChangeSchema, user: ModelUser = Depends(ge
     return response
 
 
-@router.patch('/projects/{project_id}', summary="Update project", response_model=ProjectSchema)
+@router.patch('/projects/{project_id}', summary="Update project", response_model=ProjectSchema, tags=['projects'])
 async def update_project(project_id: int, data: ProjectChangeSchema, user: ModelUser = Depends(get_current_user)):
     if user.role != "admin":
         db_project = db.session.query(ModelProject).filter_by(user_id=user.id)
@@ -144,7 +144,7 @@ async def update_project(project_id: int, data: ProjectChangeSchema, user: Model
     return updated_item
 
 
-@router.delete("/projects/{project_id}", status_code=HTTP_204_NO_CONTENT)
+@router.delete("/projects/{project_id}", status_code=HTTP_204_NO_CONTENT, tags=['projects'])
 async def delete_project(project_id: int, user: ModelUser = Depends(get_current_user)):
     if user.role != "admin":
         db_project = db.session.query(ModelProject).filter_by(user_id=user.id)
@@ -163,7 +163,7 @@ async def delete_project(project_id: int, user: ModelUser = Depends(get_current_
 ###############
 
 
-@router.get('/tickets', summary='Get list of tickets')
+@router.get('/tickets', summary='Get list of tickets', tags=['tickets'])
 async def get_tickets(project_id: Union[int, None] = None, user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         tickets_request = db.session.query(ModelTicket).all()
@@ -185,7 +185,7 @@ async def get_tickets(project_id: Union[int, None] = None, user: ModelUser = Dep
     return response
 
 
-@router.get('/tickets/{ticket_id}', summary='Get ticket by id')
+@router.get('/tickets/{ticket_id}', summary='Get ticket by id', tags=['tickets'])
 async def retrieve_tickets(ticket_id: int, user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         tickets_request = db.session.query(ModelTicket).all()
@@ -203,7 +203,7 @@ async def retrieve_tickets(ticket_id: int, user: ModelUser = Depends(get_current
     return response
 
 
-@router.post('/tickets', summary="Create new ticket", response_model=TicketSchema)
+@router.post('/tickets', summary="Create new ticket", response_model=TicketSchema, tags=['tickets'])
 async def create_tickets(data: TicketChangeSchema, user: ModelUser = Depends(get_current_user)):
     db_ticket = ModelTicket(name=data.name, description=data.description, project_id=data.project_id, status=data.status)
     db.session.add(db_ticket)
@@ -216,7 +216,7 @@ async def create_tickets(data: TicketChangeSchema, user: ModelUser = Depends(get
     return response
 
 
-@router.patch('/tickets/{ticket_id}', summary="Update ticket", response_model=TicketSchema)
+@router.patch('/tickets/{ticket_id}', summary="Update ticket", response_model=TicketSchema, tags=['tickets'])
 async def update_tickets(ticket_id: int, data: TicketChangeSchema, user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         db_ticket = db.session.query(ModelTicket).all()
@@ -242,7 +242,7 @@ async def update_tickets(ticket_id: int, data: TicketChangeSchema, user: ModelUs
     return updated_item
 
 
-@router.delete("/tickets/{ticket_id}", status_code=HTTP_204_NO_CONTENT)
+@router.delete("/tickets/{ticket_id}", status_code=HTTP_204_NO_CONTENT, tags=['tickets'])
 async def delete_ticket(ticket_id: int, user: ModelUser = Depends(get_current_user)):
     if user.role == "admin":
         db_ticket = db.session.query(ModelTicket).all()

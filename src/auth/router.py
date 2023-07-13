@@ -17,7 +17,7 @@ from src.auth.dependencies import get_current_user, RoleChecker, get_current_use
 router = APIRouter(prefix="/auth")
 
 
-@router.post('/signup', summary="Create new user", response_model=UserResponse)
+@router.post('/signup', summary="Create new user", response_model=UserResponse, tags=['auth'])
 async def create_user(data: UserSchema):
     # querying database to check if user already exist
     user_query = db.session.query(ModelUser).filter_by(email=data.email).first()
@@ -34,7 +34,7 @@ async def create_user(data: UserSchema):
     return user
 
 
-@router.post('/login', summary="Create access and refresh tokens for user", response_model=TokenSchema)
+@router.post('/login', summary="Create access and refresh tokens for user", response_model=TokenSchema, tags=['auth'])
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.session.query(ModelUser).filter_by(email=form_data.username).first()
     if user is None:
@@ -58,20 +58,20 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 allow_read_resource = RoleChecker(["admin"])
 
 
-@router.get('/my_user', summary='Get details of currently logged in user', response_model=UserResponse)
+@router.get('/my_user', summary='Get details of currently logged in user', response_model=UserResponse, tags=['auth'])
 async def get_me(user: ModelUser = Depends(get_current_user)):
     return user
 
 
-@router.get('/refresh', summary='Get tokens using refresh token')
-async def get_me(user: ModelUser = Depends(get_current_user_refresh)):
+@router.get('/refresh', summary='Get tokens using refresh token', tags=['auth'])
+async def refresh(user: ModelUser = Depends(get_current_user_refresh)):
     return {
         "access_token": create_access_token(user.email),
         "refresh_token": create_refresh_token(user.email),
     }
 
 
-@router.patch('/my_user', summary='Patch current user')
+@router.patch('/my_user', summary='Patch current user', tags=['auth'])
 async def patch_user(data: UserUpdate, user: ModelUser = Depends(get_current_user)):
     update_data = data.dict(exclude_unset=True)
     updated_item = user.copy(update=update_data)
@@ -89,7 +89,7 @@ async def patch_user(data: UserUpdate, user: ModelUser = Depends(get_current_use
     return response
 
 
-@router.delete("/my_user", status_code=HTTP_204_NO_CONTENT)
+@router.delete("/my_user", status_code=HTTP_204_NO_CONTENT, tags=['auth'])
 def delete_user(user: ModelUser = Depends(get_current_user)):
     db_user = db.session.query(ModelUser).filter_by(id=user.id).first()
     db.session.delete(db_user)

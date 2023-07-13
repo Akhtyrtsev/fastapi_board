@@ -25,6 +25,7 @@ class UserUpdate(BaseModel):
     email: Union[str, None] = None
     password: Union[str, None] = None
 
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str

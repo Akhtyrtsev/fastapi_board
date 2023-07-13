@@ -50,6 +50,7 @@ async def get_current_user(token: str = Depends(reuseable_oauth)) -> UserRespons
         )
     return UserResponse(id=user.id, username=user.username, email=user.email, role=user.role.name.value)
 
+
 async def get_current_user_refresh(token: str = Depends(reuseable_oauth)) -> UserResponse:
     try:
         payload = jwt.decode(

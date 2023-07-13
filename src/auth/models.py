@@ -34,5 +34,7 @@ class User(Base):
     created = Column(DateTime(timezone=True), server_default=func.now())
     updated = Column(DateTime(timezone=True), onupdate=func.now())
 
-
-
+class Test(Base):
+    __tablename__ = 'tests'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
